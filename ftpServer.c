@@ -41,7 +41,7 @@ int errorDetectionServer(struct packet *packetPtr);
 
 int main() {
 	char *buffer;
-	int n, sd;
+	int n, sd, packetCount;
 	unsigned int addr_length;
     struct sockaddr_in server;
     struct sockaddr from;
@@ -55,8 +55,10 @@ int main() {
     struct packet *packetPointer = &packet;
     struct hostent *hp;
 
-    // set NAK
+    // set NAK for nakPack
     nakPack.headerData.acknowledgement = '0';
+    // set ACK for ackPack
+    ackPack.headerData.acknowledgement = '1';
 
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -73,26 +75,32 @@ int main() {
 	bind(sd, (struct sockaddr *) &server, sizeof(server));
 
 	char sequenceCheck = '0'; // first packet will have sequence number of 0
+	packetCount = 0;
 	do {
 		recvfrom(sd, packetPointer, MAX_PACKET_SIZE, 0, &from, &addr_length);
 		printf("packet received\n");
-		printf("Data: %s\n", packetPointer->data);
 		printf("Sequence Number: %c\n", packetPointer->headerData.sequenceNum);
+		printf("Data: %s\n", packetPointer->data);
 		if (packetPointer->headerData.sequenceNum != sequenceCheck || errorDetectionServer(packetPointer) == 0) {
 			sendto(sd, nakPackPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &from, sizeof(from));
 			printf("NAK sent\n");
 		}
 		else {
 			sendto(sd, ackPackPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &from, sizeof(from));
-			printf("ACK sent\n");
-		}
-		// switch sequenceCheck because the next packet should have opposite of what 
-		// this packet has for sequenceNum value
-		if (sequenceCheck == '0') {
-			sequenceCheck = '1';
-		}
-		else {
-			sequenceCheck = '1';
+			printf("No erros in packet. ACK sent\n");
+			printf("Writing packet data to file...\n");
+			// 
+			//
+			// do the file writing here
+			//
+			//
+			packetCount++;
+			if (sequenceCheck == '0') {
+				sequenceCheck = '1';
+			}
+			else {
+				sequenceCheck = '0';
+			}
 		}
 	} while(packetPointer->data[0] != '\0');
 	free(buffer);
@@ -101,14 +109,17 @@ int main() {
 
 // error checking server side packet. returns 1 if checksums equal, 0 if there was an error
 int errorDetectionServer(struct packet *packetPtr) {
-	int cksum, i;
+	int i;
+	unsigned short cksum;
 
 	cksum = 0;
-	cksum += packetPtr->headerData.acknowledgement;
-	cksum += packetPtr->headerData.sequenceNum;
+	cksum += (unsigned short)packetPtr->headerData.acknowledgement;
+	cksum += (unsigned short)packetPtr->headerData.sequenceNum;
 	for (i = 0; i < MAX_PACKET_DATA_SIZE; i++) {
-		cksum += (unsigned int)packetPtr->data[i];
+		cksum += (unsigned short)packetPtr->data[i];
 	}
+	printf("Acutal checksum: %d\n", packetPtr->headerData.checksum);
+	printf("Calculated checksum: %d\n", cksum);
 	if (cksum == packetPtr->headerData.checksum) {
 		return 1;
 	}

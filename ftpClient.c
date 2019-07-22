@@ -111,17 +111,41 @@ int main() {
     int remainingLength = numOfPackets*MAX_PACKET_SIZE;
     char buf[MAX_PACKET_SIZE];
     struct packet *packetPointer = packetArray;
+    size_t length;
+    
     while (remainingLength > 0) {
-        size_t length = sendto(sd, packetPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &server, sizeof(server));
+        length = sendto(sd, packetPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &server, sizeof(server));
         printf("Packet sent\n");
+        printf("Sequence Number: %c\n", packetPointer->headerData.sequenceNum);
         printf("Data: %s\n", packetPointer->data);
         start = clock();
-        while (end - start < 20) {
-            recvfrom(sd, receivePacketPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &server, &addr_length);
+        length = 0;
+        // loop while it hasn't timed out and the length of the message is still zero
+        while ((end - start)/CLOCKS_PER_SEC < 0.02 && length != 0) {
+            length = recvfrom(sd, receivePacketPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &server, &addr_length);
             end = clock();
         }
-        packetPointer += MAX_PACKET_SIZE;
-        remainingLength -= MAX_PACKET_SIZE;
+        /* 
+           Timeout, so the current packet will be resent.
+           This keeps the pointer pointing to the same packet for the next time 
+           the program enters the loop.
+        */ 
+        if ((end - start)/CLOCKS_PER_SEC >= 0.02) {
+            printf("timeout receving ACK or NAK from server\n");
+            printf("resending packet\n");
+        }
+        else {
+            if (receivePacketPointer->headerData.acknowledgement == '1') {
+                printf("ACK received. Moving on to next packet.\n");
+                packetPointer += MAX_PACKET_SIZE;
+                remainingLength -= MAX_PACKET_SIZE;
+            }
+            else {
+                printf("NAK received: ");
+                printf("Error in packet with sequence number %d\nResending packet\n", packetPointer->headerData.sequenceNum);
+            }
+            
+        }
     }
     close(sd);
 
@@ -175,10 +199,10 @@ void errorDetectionClient(struct packet *packetArray, int numOfPackets) {
     unsigned short sum;
     for (i = 0; i <  numOfPackets; i++) {
         sum = 0;
-        sum += (unsigned int)packetArray[i].headerData.acknowledgement;
-        sum += (unsigned int)packetArray[i].headerData.sequenceNum;
+        sum += (unsigned short)packetArray[i].headerData.acknowledgement;
+        sum += (unsigned short)packetArray[i].headerData.sequenceNum;
         for (j = 0; j < MAX_PACKET_DATA_SIZE; j++) {
-            sum += (unsigned int)packetArray[i].data[j];
+            sum += (unsigned short)packetArray[i].data[j];
         }
         packetArray[i].headerData.checksum = sum;
     }
