@@ -23,24 +23,26 @@
 #endif
 
 #define MAX_PACKET_SIZE 128 //bytes
-#define MAX_PACKET_DATA_SIZE 124 // bytes
+#define MAX_PACKET_DATA_SIZE 122 // bytes
 
 struct header {
-    char acknowledgement; // 1 bytes
+    unsigned short acknowledgement; // 2 bytes
     unsigned short checksum; // 2 bytes
-    char sequenceNum; // 1 bytes
+    unsigned short sequenceNum; // 2 bytes
 };
 
 struct packet {
-    struct header headerData; // 4 bytes
-    char data[MAX_PACKET_DATA_SIZE]; // remaining 124 bytes
+    struct header headerData; // 6 bytes
+    char data[MAX_PACKET_DATA_SIZE]; // remaining 122 bytes
 };
 
 //prototypes
 int errorDetectionServer(struct packet *packetPtr);
 
 int main() {
+	FILE *filePtr;
 	char *buffer;
+	char filename[50];
 	int n, sd, packetCount;
 	unsigned int addr_length;
     struct sockaddr_in server;
@@ -74,12 +76,17 @@ int main() {
 	sd = socket(AF_INET, SOCK_DGRAM, 0);
 	bind(sd, (struct sockaddr *) &server, sizeof(server));
 
-	char sequenceCheck = '0'; // first packet will have sequence number of 0
+	unsigned short sequenceCheck = 0; // first packet will have sequence number of 0
 	packetCount = 0;
+
+	// receive filename 
+	recvfrom(sd, filename, 50, 0, &from, &addr_length);
+
 	do {
 		recvfrom(sd, packetPointer, MAX_PACKET_SIZE, 0, &from, &addr_length);
 		printf("packet received\n");
-		printf("Sequence Number: %c\n", packetPointer->headerData.sequenceNum);
+		printf("Sequence Number: %d\n", packetPointer->headerData.sequenceNum);
+		printf("Seqence check: %d\n", sequenceCheck);
 		printf("Data: %s\n", packetPointer->data);
 		if (packetPointer->headerData.sequenceNum != sequenceCheck || errorDetectionServer(packetPointer) == 0) {
 			sendto(sd, nakPackPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &from, sizeof(from));
@@ -89,11 +96,9 @@ int main() {
 			sendto(sd, ackPackPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &from, sizeof(from));
 			printf("No erros in packet. ACK sent\n");
 			printf("Writing packet data to file...\n");
-			// 
-			//
-			// do the file writing here
-			//
-			//
+			filePtr = fopen(filename, "w");
+			fprintf(filePtr, "%s", packetPointer->data);
+			fclose(filePtr);
 			packetCount++;
 			if (sequenceCheck == '0') {
 				sequenceCheck = '1';

@@ -25,17 +25,17 @@
 #endif
 
 #define MAX_PACKET_SIZE 128 //bytes
-#define MAX_PACKET_DATA_SIZE 124 // bytes
+#define MAX_PACKET_DATA_SIZE 122 // bytes
 
 struct header {
-    char acknowledgement; // 1 byte
+    unsigned short acknowledgement; // 1 byte
     unsigned short checksum; // 2 bytes
-    char sequenceNum; // 1 byte
+    unsigned short sequenceNum; // 1 byte
 };
 
 struct packet {
-    struct header headerData; // 4 bytes
-    char data[MAX_PACKET_DATA_SIZE]; // remaining 124 bytes
+    struct header headerData; // 6 bytes
+    char data[MAX_PACKET_DATA_SIZE]; // remaining 122 bytes
 };
 
 // prototypes
@@ -59,7 +59,7 @@ int main() {
     struct packet *receivePacketPointer = &receivePacket;
     time_t start, end;
 
-    printf("Enter the file name to be read into the buffer:\n");
+    printf("Enter the file name to be read into the buffer: ");
     
     // fgets keeps the newline character so it will need to be removed in order to be read 
     fgets(filename, 50, stdin);
@@ -112,12 +112,16 @@ int main() {
     char buf[MAX_PACKET_SIZE];
     struct packet *packetPointer = packetArray;
     size_t length;
+
+    // send filename
+    sendto(sd, packetPointer, 50, 0, (struct sockaddr *) &server, sizeof(server));
     
     while (remainingLength > 0) {
         length = sendto(sd, packetPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &server, sizeof(server));
         printf("Packet sent\n");
-        printf("Sequence Number: %c\n", packetPointer->headerData.sequenceNum);
+        printf("Sequence Number: %d\n", packetPointer->headerData.sequenceNum);
         printf("Data: %s\n", packetPointer->data);
+        printf("Checksum: %d\n", packetPointer->headerData.checksum);
         start = clock();
         length = 0;
         // loop while it hasn't timed out and the length of the message is still zero
@@ -142,7 +146,7 @@ int main() {
             }
             else {
                 printf("NAK received: ");
-                printf("Error in packet with sequence number %d\nResending packet\n", packetPointer->headerData.sequenceNum);
+                printf("Error in packet with sequence number %c\nResending packet\n", packetPointer->headerData.sequenceNum);
             }
             
         }
@@ -169,13 +173,13 @@ void segmentData(char *buffer, int bufferLength, struct packet *packetArray) {
     int numOfPackets = (bufferLength + MAX_PACKET_DATA_SIZE - 1)/MAX_PACKET_DATA_SIZE;
     numOfPackets++;
     for (i = 0; i < numOfPackets - 1; i++) {
-        packetArray[i].headerData.acknowledgement = '1';
-        packetArray[i].headerData.checksum = '0';
+        packetArray[i].headerData.acknowledgement = 1;
+        packetArray[i].headerData.checksum = 0;
         if (i%2 == 0) {
-            packetArray[i].headerData.sequenceNum = '0';
+            packetArray[i].headerData.sequenceNum = 0;
         } 
         else {
-            packetArray[i].headerData.sequenceNum = '1';
+            packetArray[i].headerData.sequenceNum = 1;
         }
         k = 0;
         for (j = i*MAX_PACKET_DATA_SIZE; j < (i*MAX_PACKET_DATA_SIZE+MAX_PACKET_DATA_SIZE); j++) {
@@ -185,12 +189,12 @@ void segmentData(char *buffer, int bufferLength, struct packet *packetArray) {
     }
     // final packet gets null character for data
     packetArray[numOfPackets].data[0] = '\0';
-    packetArray[numOfPackets].headerData.acknowledgement = '1';
+    packetArray[numOfPackets].headerData.acknowledgement = 1;
     if (numOfPackets%2 == 0) {
-        packetArray[numOfPackets].headerData.sequenceNum = '0';
+        packetArray[numOfPackets].headerData.sequenceNum = 0;
     } 
     else {
-        packetArray[numOfPackets].headerData.sequenceNum = '1';
+        packetArray[numOfPackets].headerData.sequenceNum = 1;
     }
 }
 
@@ -202,7 +206,7 @@ void errorDetectionClient(struct packet *packetArray, int numOfPackets) {
         sum = 0;
         sum += (unsigned short)packetArray[i].headerData.acknowledgement;
         sum += (unsigned short)packetArray[i].headerData.sequenceNum;
-        for (j = 0; j < strlen(packetArray[j].data); j++) {
+        for (j = 0; j < strlen(packetArray[i].data); j++) {
             sum += (unsigned short)packetArray[i].data[j];
         }
         packetArray[i].headerData.checksum = sum;
