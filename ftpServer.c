@@ -115,7 +115,7 @@ int errorDetectionServer(struct packet *packetPtr) {
 	cksum = 0;
 	cksum += (unsigned short)packetPtr->headerData.acknowledgement;
 	cksum += (unsigned short)packetPtr->headerData.sequenceNum;
-	for (i = 0; i < MAX_PACKET_DATA_SIZE; i++) {
+	for (i = 0; i < strlen(packetPtr->data); i++) {
 		cksum += (unsigned short)packetPtr->data[i];
 	}
 	printf("Acutal checksum: %d\n", packetPtr->headerData.checksum);
