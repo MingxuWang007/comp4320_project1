@@ -113,10 +113,7 @@ int main() {
     struct packet *packetPointer = packetArray;
     size_t length;
 
-    // send filename
-    sendto(sd, packetPointer, 50, 0, (struct sockaddr *) &server, sizeof(server));
-    
-    while (remainingLength > 0) {
+    while (packetPointer->data[0] != '\0') {
         length = sendto(sd, packetPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &server, sizeof(server));
         printf("Packet sent\n");
         printf("Sequence Number: %c\n", packetPointer->headerData.sequenceNum);
@@ -124,10 +121,7 @@ int main() {
         printf("Checksum: %d\n", packetPointer->headerData.checksum);
         
         // loop while it hasn't timed out and the length of the message is still zero
-        
         length = recvfrom(sd, receivePacketPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &server, &addr_length);
-       
-        
         /* 
            Timeout, so the current packet will be resent.
            This keeps the pointer pointing to the same packet for the next time 
@@ -150,17 +144,9 @@ int main() {
             
         }
     }
+    // send null packet
+    sendto(sd, packetPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &server, sizeof(server));
     close(sd);
-
-    /*
-    for (int i = 0; i < numOfPackets; i++) {
-        printf("\nPacket number %d\n", i);
-        printf("Header ACK: %d", packetArray[i].headerData.acknowledgement);
-        printf("\nHeader cksm: %d", packetArray[i].headerData.checksum);
-        printf("\nHeader sequenceNum: %d\n", packetArray[i].headerData.sequenceNum);
-        printf("Data: %s\n", packetArray[i].data);
-    }
-    */
 
     free(buffer);
     free(packetArray);
@@ -222,21 +208,3 @@ void removeNewline(char *array) {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

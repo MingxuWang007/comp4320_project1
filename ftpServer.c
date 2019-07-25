@@ -79,8 +79,6 @@ int main() {
 	char sequenceCheck = '0'; // first packet will have sequence number of 0
 	packetCount = 0;
 
-	// receive filename 
-	recvfrom(sd, filename, 50, 0, &from, &addr_length);
 
 	do {
 		recvfrom(sd, packetPointer, MAX_PACKET_SIZE, 0, &from, &addr_length);
@@ -133,32 +131,3 @@ int errorDetectionServer(struct packet *packetPtr) {
 		return 0;
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
