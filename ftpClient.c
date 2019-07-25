@@ -102,7 +102,7 @@ int main() {
 
     sd = socket(AF_INET, SOCK_DGRAM, 0);
 
-    hp = gethostbyname("192.168.1.7"); 
+    hp = gethostbyname("127.0.0.1"); 
     bcopy(hp->h_addr, &(server.sin_addr), hp->h_length);
     server.sin_family = AF_INET;
     server.sin_port = htons(12345);
@@ -122,13 +122,12 @@ int main() {
         printf("Sequence Number: %c\n", packetPointer->headerData.sequenceNum);
         printf("Data: %s\n", packetPointer->data);
         printf("Checksum: %d\n", packetPointer->headerData.checksum);
-        start = clock();
-        length = 0;
+        
         // loop while it hasn't timed out and the length of the message is still zero
-        while ((end - start)/CLOCKS_PER_SEC < 0.02 && length != 0) {
-            length = recvfrom(sd, receivePacketPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &server, &addr_length);
-            end = clock();
-        }
+        
+        length = recvfrom(sd, receivePacketPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &server, &addr_length);
+       
+        
         /* 
            Timeout, so the current packet will be resent.
            This keeps the pointer pointing to the same packet for the next time 
@@ -191,10 +190,10 @@ void segmentData(char *buffer, int bufferLength, struct packet *packetArray) {
     packetArray[numOfPackets].data[0] = '\0';
     packetArray[numOfPackets].headerData.acknowledgement = '1';
     if (numOfPackets%2 == 0) {
-        packetArray[numOfPackets].headerData.sequenceNum = '0';
+        packetArray[numOfPackets].headerData.sequenceNum = '1';
     } 
     else {
-        packetArray[numOfPackets].headerData.sequenceNum = '1';
+        packetArray[numOfPackets].headerData.sequenceNum = '0';
     }
 }
 

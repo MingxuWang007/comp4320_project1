@@ -67,7 +67,7 @@ int main() {
     server.sin_port = htons(12345);
 
     from.sa_family = AF_INET;
-    hp = gethostbyname("192.168.1.7"); // client's IP
+    hp = gethostbyname("127.0.0.1"); // client's IP
     bcopy(hp->h_addr, &(server.sin_addr), hp->h_length);
     addr_length = sizeof(from);
 
