@@ -119,7 +119,7 @@ int main() {
     while (remainingLength > 0) {
         length = sendto(sd, packetPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &server, sizeof(server));
         printf("Packet sent\n");
-        printf("Sequence Number: %d\n", packetPointer->headerData.sequenceNum);
+        printf("Sequence Number: %c\n", packetPointer->headerData.sequenceNum);
         printf("Data: %s\n", packetPointer->data);
         printf("Checksum: %d\n", packetPointer->headerData.checksum);
         start = clock();
@@ -173,13 +173,13 @@ void segmentData(char *buffer, int bufferLength, struct packet *packetArray) {
     int numOfPackets = (bufferLength + MAX_PACKET_DATA_SIZE - 1)/MAX_PACKET_DATA_SIZE;
     numOfPackets++;
     for (i = 0; i < numOfPackets - 1; i++) {
-        packetArray[i].headerData.acknowledgement = 1;
+        packetArray[i].headerData.acknowledgement = '1';
         packetArray[i].headerData.checksum = 0;
         if (i%2 == 0) {
-            packetArray[i].headerData.sequenceNum = 0;
+            packetArray[i].headerData.sequenceNum = '0';
         } 
         else {
-            packetArray[i].headerData.sequenceNum = 1;
+            packetArray[i].headerData.sequenceNum = '1';
         }
         k = 0;
         for (j = i*MAX_PACKET_DATA_SIZE; j < (i*MAX_PACKET_DATA_SIZE+MAX_PACKET_DATA_SIZE); j++) {
@@ -189,12 +189,12 @@ void segmentData(char *buffer, int bufferLength, struct packet *packetArray) {
     }
     // final packet gets null character for data
     packetArray[numOfPackets].data[0] = '\0';
-    packetArray[numOfPackets].headerData.acknowledgement = 1;
+    packetArray[numOfPackets].headerData.acknowledgement = '1';
     if (numOfPackets%2 == 0) {
-        packetArray[numOfPackets].headerData.sequenceNum = 0;
+        packetArray[numOfPackets].headerData.sequenceNum = '0';
     } 
     else {
-        packetArray[numOfPackets].headerData.sequenceNum = 1;
+        packetArray[numOfPackets].headerData.sequenceNum = '1';
     }
 }
 

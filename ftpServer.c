@@ -23,17 +23,17 @@
 #endif
 
 #define MAX_PACKET_SIZE 128 //bytes
-#define MAX_PACKET_DATA_SIZE 122 // bytes
+#define MAX_PACKET_DATA_SIZE 124 // bytes
 
 struct header {
-    unsigned short acknowledgement; // 2 bytes
+    char acknowledgement; // 1 bytes
     unsigned short checksum; // 2 bytes
-    unsigned short sequenceNum; // 2 bytes
+    char sequenceNum; // 1 bytes
 };
 
 struct packet {
-    struct header headerData; // 6 bytes
-    char data[MAX_PACKET_DATA_SIZE]; // remaining 122 bytes
+    struct header headerData; // 4 bytes
+    char data[MAX_PACKET_DATA_SIZE]; // remaining 124 bytes
 };
 
 //prototypes
@@ -76,7 +76,7 @@ int main() {
 	sd = socket(AF_INET, SOCK_DGRAM, 0);
 	bind(sd, (struct sockaddr *) &server, sizeof(server));
 
-	unsigned short sequenceCheck = 0; // first packet will have sequence number of 0
+	char sequenceCheck = '0'; // first packet will have sequence number of 0
 	packetCount = 0;
 
 	// receive filename 
@@ -85,8 +85,8 @@ int main() {
 	do {
 		recvfrom(sd, packetPointer, MAX_PACKET_SIZE, 0, &from, &addr_length);
 		printf("packet received\n");
-		printf("Sequence Number: %d\n", packetPointer->headerData.sequenceNum);
-		printf("Seqence check: %d\n", sequenceCheck);
+		printf("Sequence Number: %c\n", packetPointer->headerData.sequenceNum);
+		printf("Seqence check: %c\n", sequenceCheck);
 		printf("Data: %s\n", packetPointer->data);
 		if (packetPointer->headerData.sequenceNum != sequenceCheck || errorDetectionServer(packetPointer) == 0) {
 			sendto(sd, nakPackPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &from, sizeof(from));
