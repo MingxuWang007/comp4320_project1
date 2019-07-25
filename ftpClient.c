@@ -25,17 +25,17 @@
 #endif
 
 #define MAX_PACKET_SIZE 128 //bytes
-#define MAX_PACKET_DATA_SIZE 122 // bytes
+#define MAX_PACKET_DATA_SIZE 124 // bytes
 
 struct header {
-    char acknowledgement; // 2 bytes
+    char acknowledgement; // 1 byte
     unsigned short checksum; // 2 bytes
-    char sequenceNum; // 2 bytes
+    char sequenceNum; // 1 byte
 };
 
 struct packet {
-    struct header headerData; // 6 bytes
-    char data[MAX_PACKET_DATA_SIZE]; // remaining 122 bytes
+    struct header headerData; // 4 bytes
+    char data[MAX_PACKET_DATA_SIZE]; // remaining 124 bytes
 };
 
 // prototypes
@@ -194,14 +194,15 @@ void segmentData(char *buffer, int bufferLength, struct packet *packetArray) {
     }
 }
 
+// method for calculating checksum to place in packet's header
 void errorDetectionClient(struct packet *packetArray, int numOfPackets) {
     int i, j;
     unsigned short sum;
-    for (i = 0; i <  numOfPackets; i++) {
+    for (i = 0; i < numOfPackets; i++) {
         sum = 0;
         sum += (unsigned short)packetArray[i].headerData.acknowledgement;
         sum += (unsigned short)packetArray[i].headerData.sequenceNum;
-        for (j = 0; j < MAX_PACKET_DATA_SIZE; j++) {
+        for (j = 0; j < strlen(packetArray[j].data); j++) {
             sum += (unsigned short)packetArray[i].data[j];
         }
         packetArray[i].headerData.checksum = sum;

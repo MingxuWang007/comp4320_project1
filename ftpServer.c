@@ -23,17 +23,17 @@
 #endif
 
 #define MAX_PACKET_SIZE 128 //bytes
-#define MAX_PACKET_DATA_SIZE 122 // bytes
+#define MAX_PACKET_DATA_SIZE 124 // bytes
 
 struct header {
-    char acknowledgement; // 2 bytes
+    char acknowledgement; // 1 bytes
     unsigned short checksum; // 2 bytes
-    char sequenceNum; // 2 bytes
+    char sequenceNum; // 1 bytes
 };
 
 struct packet {
-    struct header headerData; // 6 bytes
-    char data[MAX_PACKET_DATA_SIZE]; // remaining 122 bytes
+    struct header headerData; // 4 bytes
+    char data[MAX_PACKET_DATA_SIZE]; // remaining 124 bytes
 };
 
 //prototypes
