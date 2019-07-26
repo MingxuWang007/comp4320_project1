@@ -1,0 +1,13 @@
+Script started on Thu Jul 25 22:24:45 2019
+[?1034hbash-3.2$ ./ftpClient
+Enter the file name to be read into the buffer: asdf2.txt
+Packet sent
+Sequence Number: 0
+Data: asdf
+Checksum: 511
+ACK received. Moving on to next packet.
+Final Packet Sent
+bash-3.2$ exit
+exit
+
+Script done on Thu Jul 25 22:24:53 2019
