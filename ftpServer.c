@@ -94,10 +94,10 @@ int main() {
 			sendto(sd, ackPackPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &from, sizeof(from));
 			printf("No erros in packet. ACK sent\n");
 			printf("Writing packet data to file...\n");
-			filePtr = fopen(filename, "w");
+			filePtr = fopen("receivedFile.txt", "w");
 			fprintf(filePtr, "%s", packetPointer->data);
 			fclose(filePtr);
-			filePtr = fopen(filename, "r");
+			filePtr = fopen("receivedFile.txt", "r");
 			if (filePtr == NULL) {
 				printf("error opening file\n");
 				return 0;

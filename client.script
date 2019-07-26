@@ -1,4 +1,4 @@
-Script started on Thu Jul 25 22:24:45 2019
+Script started on Thu Jul 25 22:41:32 2019
 [?1034hbash-3.2$ ./ftpClient
 Enter the file name to be read into the buffer: asdf2.txt
 Packet sent
@@ -10,4 +10,4 @@ Final Packet Sent
 bash-3.2$ exit
 exit
 
-Script done on Thu Jul 25 22:24:53 2019
+Script done on Thu Jul 25 22:41:51 2019
