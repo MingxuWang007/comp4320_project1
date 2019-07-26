@@ -64,7 +64,7 @@ int main() {
 
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = htonl(INADDR_ANY);
-    server.sin_port = htons(12345);
+    server.sin_port = htons(10012);
 
     from.sa_family = AF_INET;
     hp = gethostbyname("127.0.0.1"); // client's IP
@@ -97,6 +97,12 @@ int main() {
 			filePtr = fopen(filename, "w");
 			fprintf(filePtr, "%s", packetPointer->data);
 			fclose(filePtr);
+			filePtr = fopen(filename, "r");
+			if (filePtr == NULL) {
+				printf("error opening file\n");
+				return 0;
+			}
+			printf("The contents of the file:\n%s\n", filename);
 			packetCount++;
 			if (sequenceCheck == '0') {
 				sequenceCheck = '1';

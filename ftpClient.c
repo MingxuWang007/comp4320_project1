@@ -1,5 +1,3 @@
-/* Reads file into a buffer  */
-
 #ifndef __unp_h
 #define __unp_h
 #include <sys/types.h>
@@ -25,16 +23,16 @@
 #endif
 
 #define MAX_PACKET_SIZE 128 //bytes
-#define MAX_PACKET_DATA_SIZE 122 // bytes
+#define MAX_PACKET_DATA_SIZE 124 // bytes
 
 struct header {
-    unsigned short acknowledgement; // 1 byte
+    char acknowledgement; // 1 byte
     unsigned short checksum; // 2 bytes
-    unsigned short sequenceNum; // 1 byte
+    char sequenceNum; // 1 byte
 };
 
 struct packet {
-    struct header headerData; // 6 bytes
+    struct header headerData; // 4 bytes
     char data[MAX_PACKET_DATA_SIZE]; // remaining 122 bytes
 };
 
@@ -71,6 +69,15 @@ int main() {
         return 1;
     }
 
+    sd = socket(AF_INET, SOCK_DGRAM, 0);
+
+    hp = gethostbyname("127.0.0.1"); 
+    bcopy(hp->h_addr, &(server.sin_addr), hp->h_length);
+    server.sin_family = AF_INET;
+    server.sin_port = htons(10012);
+
+    addr_length = sizeof(server);
+
     //  Find the length of the file in bytes
     fseek(infile, 0, SEEK_END); 
     numbytes = ftell(infile);
@@ -100,18 +107,13 @@ int main() {
     segmentData(buffer, bufferLength, packetArray);
     errorDetectionClient(packetArray, numOfPackets);
 
-    sd = socket(AF_INET, SOCK_DGRAM, 0);
 
-    hp = gethostbyname("127.0.0.1"); 
-    bcopy(hp->h_addr, &(server.sin_addr), hp->h_length);
-    server.sin_family = AF_INET;
-    server.sin_port = htons(12345);
-
-    addr_length = sizeof(server);
     int remainingLength = numOfPackets*MAX_PACKET_SIZE;
     char buf[MAX_PACKET_SIZE];
     struct packet *packetPointer = packetArray;
     size_t length;
+
+
 
     while (packetPointer->data[0] != '\0') {
         length = sendto(sd, packetPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &server, sizeof(server));
@@ -146,6 +148,7 @@ int main() {
     }
     // send null packet
     sendto(sd, packetPointer, MAX_PACKET_SIZE, 0, (struct sockaddr *) &server, sizeof(server));
+    printf("Final Packet Sent\n");
     close(sd);
 
     free(buffer);
